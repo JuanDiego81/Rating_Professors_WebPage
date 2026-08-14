@@ -1,0 +1,87 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+model University {
+  id          String       @id @default(cuid())
+  name        String
+  departments Department[]
+}
+
+model Department {
+  id            String        @id @default(cuid())
+  name          String
+  university    University   @relation(fields: [universityId], references: [id])
+  universityId  String
+  professors    Professor[]
+}
+
+model Professor {
+  id              String        @id @default(cuid())
+  name            String
+  department      Department    @relation(fields:   [departmentId], references: [id])
+  departmentId    String
+  courses         Course[]     @relation("ProfessorCourses")
+  reviews         Review[]
+}
+
+model Course {
+  id         String      @id @default(cuid())
+  code       String      // e.g. "CS 101"
+  name       String      // e.g. "Intro to Computer Science"
+  professors Professor[] @relation("ProfessorCourses")
+  reviews    Review[]
+}
+
+model User {
+  id      String   @id @default(cuid())
+  email   String   @unique
+  reviews Review[]
+  votes   Vote[]
+}
+
+model Tag {
+  id      String   @id @default(cuid())
+  label   String   @unique   // e.g. "Heavy Workload", "Clear Explanations"
+  reviews Review[] @relation("ReviewTags")
+}
+
+model Vote {
+  id        String   @id @default(cuid())
+  value     Int      // 1 for upvote, -1 for downvote
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  review    Review   @relation(fields: [reviewId], references: [id])
+  reviewId  String
+
+  @@unique([userId, reviewId])  // one vote per user per review
+}
+
+model Review {
+  id             String    @id @default(cuid())
+  qualityRating  Int       // 1-5
+  difficultyRating Int     // 1-5
+  wouldTakeAgain Boolean?
+  gradeReceived  String?   // e.g. "A-", or null/"Not disclosed"
+  tags           Tag[] @relation("ReviewTags")
+  comment        String
+  createdAt      DateTime  @default(now())
+  votes          Vote[]
+  professor      Professor @relation(fields: [professorId], references: [id])
+  professorId    String
+  course         Course    @relation(fields: [courseId], references: [id])
+  courseId       String
+  user           User      @relation(fields: [userId], references: [id])
+  userId         String
+}
