@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../generated/prisma/client";
+import { AuthenticatedRequest } from "../authenticator/auth.middleware";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
@@ -41,5 +42,35 @@ export async function getCourse(req: Request, res: Response) {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to fetch course" });
+  }
+}
+
+// POST /courses
+// Creates a new course. Protected by requireAuth - only logged-in users can add courses.
+export async function createCourse(req: AuthenticatedRequest, res: Response) {
+  try {
+    const { code, name } = req.body;
+ 
+    if (!code || !name) {
+      return res.status(400).json({ error: "code and name are required" });
+    }
+ 
+    // Check if a course with this code already exists, to avoid duplicates
+    const existingCourse = await prisma.course.findFirst({
+      where: { code },
+    });
+ 
+    if (existingCourse) {
+      return res.status(409).json({ error: "A course with this code already exists" });
+    }
+ 
+    const course = await prisma.course.create({
+      data: { code, name },
+    });
+ 
+    res.status(201).json(course);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to create course" });
   }
 }

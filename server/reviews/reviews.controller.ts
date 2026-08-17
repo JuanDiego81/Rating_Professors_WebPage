@@ -1,6 +1,8 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../generated/prisma/client";
+import { AuthenticatedRequest } from "../authenticator/auth.middleware";
+import { Request } from "express";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
@@ -48,5 +50,60 @@ export async function getReview(req: Request, res: Response) {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to fetch review" });
+  }
+}
+
+// POST /reviews
+// Creates a new review. Protected by requireAuth middleware - only logged-in users can hit this.
+// Note: we use req.userId (set by the auth middleware after verifying the token),
+// NOT a userId sent in the request body. Never trust the client to say who they are.
+export async function createReview(req: AuthenticatedRequest, res: Response) {
+  try {
+    const userId = req.userId as string;
+
+    const {
+      professorId,
+      courseId,
+      qualityRating,
+      difficultyRating,
+      wouldTakeAgain,
+      gradeReceived,
+      comment,
+      tagIds, // expects an array of existing Tag ids, e.g. ["tagId1", "tagId2"]
+    } = req.body;
+
+    if (!professorId || !courseId || !qualityRating || !difficultyRating || !comment) {
+      return res.status(400).json({
+        error: "professorId, courseId, qualityRating, difficultyRating, and comment are required",
+      });
+    }
+
+    const review = await prisma.review.create({
+      data: {
+        professorId,
+        courseId,
+        userId,
+        qualityRating,
+        difficultyRating,
+        wouldTakeAgain: wouldTakeAgain ?? null,
+        gradeReceived: gradeReceived ?? null,
+        comment,
+        tags: tagIds
+          ? {
+              connect: tagIds.map((id: string) => ({ id })),
+            }
+          : undefined,
+      },
+      include: {
+        professor: true,
+        course: true,
+        tags: true,
+      },
+    });
+
+    res.status(201).json(review);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to create review" });
   }
 }

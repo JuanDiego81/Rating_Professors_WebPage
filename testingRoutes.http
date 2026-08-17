@@ -53,7 +53,7 @@ POST http://localhost:3000/auth/signup HTTP/1.1
 Content-Type: application/json
 
 {
-    "email": "newstudent3@example.com",
+    "email": "newstudent4@example.com",
     "password": "mypassword123"
 }
 
@@ -75,7 +75,7 @@ POST http://localhost:3000/auth/login HTTP/1.1
 Content-Type: application/json
 
 {
-    "email": "newstudent3@example.com",
+    "email": "newstudent4@example.com",
     "password": "mypassword123"
 }
 
@@ -99,4 +99,65 @@ Content-Type: application/json
 {
     "email": "doesnotexist@example.com",
     "password": "password123"
+}
+
+
+### Create a review - NO TOKEN (should fail with 401)
+POST http://localhost:3000/reviews HTTP/1.1
+Content-Type: application/json
+
+{
+    "professorId": "REPLACE_WITH_PROFESSOR_ID",
+    "courseId": "REPLACE_WITH_COURSE_ID",
+    "qualityRating": 5,
+    "difficultyRating": 3,
+    "wouldTakeAgain": true,
+    "gradeReceived": "A",
+    "comment": "Great professor, explains things clearly."
+}
+
+###
+
+### Create a review - WITH TOKEN (paste the token from your login response above)
+POST http://localhost:3000/reviews HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer REPLACE_WITH_TOKEN
+
+{
+    "professorId": "REPLACE_WITH_PROFESSOR_ID",
+    "courseId": "REPLACE_WITH_COURSE_ID",
+    "qualityRating": 5,
+    "difficultyRating": 3,
+    "wouldTakeAgain": true,
+    "gradeReceived": "A",
+    "comment": "Great professor, explains things clearly."
+}
+
+###
+
+### Create a review with tags - WITH TOKEN
+POST http://localhost:3000/reviews HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbXN4YzdkYW4wMDAwc2MxaDAxeTd1YnlhIiwiaWF0IjoxNzg2OTc3NDcyLCJleHAiOjE3ODc1ODIyNzJ9.A5OeCT-nrsLuTyvXwqVqEZfKHGqB_vgUUfgh8MdqdvM
+
+{
+    "professorId": "cmst7l9zq0009no1hgqvv8i0y",
+    "courseId": "cmst7l9yt0005no1hxn7ga5ov",
+    "qualityRating": 4,
+    "difficultyRating": 4,
+    "wouldTakeAgain": false,
+    "gradeReceived": "Not disclosed",
+    "comment": "Tough but fair grading, learned a lot.",
+    "tagIds": ["cmst7la0h000dno1hu2cz6ckv", "cmst7la0h000fno1hlbbwe0rr"]
+}
+
+###
+
+### Create a review - missing required fields (should fail with 400)
+POST http://localhost:3000/reviews HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbXN4YzdkYW4wMDAwc2MxaDAxeTd1YnlhIiwiaWF0IjoxNzg2OTc3NDcyLCJleHAiOjE3ODc1ODIyNzJ9.A5OeCT-nrsLuTyvXwqVqEZfKHGqB_vgUUfgh8MdqdvM
+
+{
+    "comment": "Missing everything else"
 }
