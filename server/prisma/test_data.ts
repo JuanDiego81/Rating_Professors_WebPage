@@ -5,7 +5,22 @@ import bcrypt from "bcrypt";
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
+async function reset() {
+  // Delete in FK-safe order (children before parents). Join tables
+  // (_ProfessorCourses, _ReviewTags) cascade automatically.
+  await prisma.vote.deleteMany();
+  await prisma.review.deleteMany();
+  await prisma.professor.deleteMany();
+  await prisma.course.deleteMany();
+  await prisma.department.deleteMany();
+  await prisma.university.deleteMany();
+  await prisma.tag.deleteMany();
+  await prisma.user.deleteMany();
+}
+
 async function main() {
+  await reset();
+
   // 1. Create universities
   const stateUni = await prisma.university.create({
     data: { name: "State University" },
