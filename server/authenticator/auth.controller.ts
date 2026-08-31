@@ -7,6 +7,10 @@ import { PrismaClient } from "../generated/prisma/client";
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
+// Good-enough email shape check: something@something.something, no whitespace.
+// Not full RFC 5322 compliance - that's overkill and rejects valid edge-case addresses.
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 // POST /auth/signup
 // Creates a new user with a hashed password, then returns a JWT token.
 export async function signup(req: Request, res: Response) {
@@ -15,6 +19,14 @@ export async function signup(req: Request, res: Response) {
 
     if (!email || !password) {
       return res.status(400).json({ error: "Email and password are required" });
+    }
+
+    if (!EMAIL_REGEX.test(email)) {
+      return res.status(400).json({ error: "Please enter a valid email address" });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({ error: "Password must be at least 8 characters" });
     }
 
     // Check if a user with this email already exists

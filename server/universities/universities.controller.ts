@@ -19,8 +19,9 @@ export async function listUniversities(req: Request, res: Response) {    // stan
 }
 
 // GET /universities/:id
-// Returns one university with its departments, and each department's professors.
-// This powers the "select a university -> see departments + professors" filter panel.
+// Returns one university with its departments, each department's professors,
+// and each professor's courses. This powers the "select a university -> see
+// departments + courses + professors" filter panels.
 export async function getUniversity(req: Request, res: Response) {
   try {
     const id = req.params.id as string;      // extracts the id from the URL (e.g. /universities/abc-123). The as string cast tells TypeScript to treat it as a string.
@@ -28,8 +29,12 @@ export async function getUniversity(req: Request, res: Response) {
     const university = await prisma.university.findUnique({ where: { id },   // queries the DB for exactly one university matching that ID.
       include: {              // this is where it gets interesting. Instead of just returning the university row, Prisma also fetches related data:
         departments: {
-          include: {                 
-            professors: true,        // (nested inside departments) — all professors in each department
+          include: {
+            professors: {
+              include: {
+                courses: true,   // (nested inside professors) — all courses each professor teaches
+              },
+            },
           },
         },
       },

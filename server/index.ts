@@ -8,6 +8,7 @@ import courseRoutes from "./courses/courses.routes";
 import reviewRoutes from "./reviews/reviews.routes";
 import authRoutes from "./authenticator/auth.routes";
 import departmentRoutes from "./departments/department.routes";
+import tagRoutes from "./tag/tag.route";
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use("/courses", courseRoutes);
 app.use("/reviews", reviewRoutes);
 app.use("/auth", authRoutes);
 app.use("/departments", departmentRoutes);
+app.use("/tags", tagRoutes);
 
 // Simple health check route, just to confirm the server is alive
 app.get("/", (req, res) => {
