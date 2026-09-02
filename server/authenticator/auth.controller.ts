@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../generated/prisma/client";
+import { AuthenticatedRequest } from "./auth.middleware";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
@@ -92,5 +93,24 @@ export async function login(req: Request, res: Response) {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to log in" });
+  }
+}
+
+// GET /auth/me
+// Returns the currently logged-in user. Protected by requireAuth, which already
+// rejects the request with a 401 if the token's user no longer exists - so by
+// the time this runs, the user is guaranteed to be there. Lets the frontend
+// verify a token it restored from localStorage is still good.
+export async function me(req: AuthenticatedRequest, res: Response) {
+  try {
+    const user = await prisma.user.findUnique({ where: { id: req.userId as string } });
+    if (!user) {
+      return res.status(401).json({ error: "Session expired, please log in again" });
+    }
+
+    res.json({ user: { id: user.id, email: user.email } });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch current user" });
   }
 }

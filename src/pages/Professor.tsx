@@ -196,8 +196,10 @@ export default function Professor() {
         {/* Write a review - shows login modal if not logged in */}
         <WriteReview
           professorId={professor.id}
+          departmentId={professor.department.id}
           courses={professor.courses}
           onReviewCreated={fetchProfessor}
+          onCourseAdded={fetchProfessor}
         />
 
         {/* Reviews list */}

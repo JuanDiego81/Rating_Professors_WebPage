@@ -25,6 +25,7 @@ model Department {
   university    University   @relation(fields: [universityId], references: [id])
   universityId  String
   professors    Professor[]
+  courses       Course[]
 }
 
 model Professor {
@@ -37,11 +38,13 @@ model Professor {
 }
 
 model Course {
-  id         String      @id @default(cuid())
-  code       String      // e.g. "CS 101"
-  name       String      // e.g. "Intro to Computer Science"
-  professors Professor[] @relation("ProfessorCourses")
-  reviews    Review[]
+  id           String      @id @default(cuid())
+  code         String      // e.g. "CS 101"
+  name         String      // e.g. "Intro to Computer Science"
+  department   Department  @relation(fields: [departmentId], references: [id])
+  departmentId String
+  professors   Professor[] @relation("ProfessorCourses")
+  reviews      Review[]
 }
 
 model User {

@@ -43,21 +43,21 @@ async function main() {
     data: { name: "Engineering", universityId: techUni.id },
   });
 
-  // 3. Create courses
+  // 3. Create courses, each scoped to the department that teaches it
   const cs101 = await prisma.course.create({
-    data: { code: "CS 101", name: "Intro to Computer Science" },
+    data: { code: "CS 101", name: "Intro to Computer Science", departmentId: csDept.id },
   });
 
   const cs201 = await prisma.course.create({
-    data: { code: "CS 201", name: "Data Structures" },
+    data: { code: "CS 201", name: "Data Structures", departmentId: csDept.id },
   });
 
   const math101 = await prisma.course.create({
-    data: { code: "MATH 101", name: "Calculus I" },
+    data: { code: "MATH 101", name: "Calculus I", departmentId: mathDept.id },
   });
 
   const eng150 = await prisma.course.create({
-    data: { code: "ENG 150", name: "Intro to Engineering Design" },
+    data: { code: "ENG 150", name: "Intro to Engineering Design", departmentId: engDept.id },
   });
 
   // 4. Create professors, linked to a department and to the courses they teach

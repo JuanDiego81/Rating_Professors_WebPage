@@ -78,6 +78,23 @@ export async function createReview(req: AuthenticatedRequest, res: Response) {
       });
     }
 
+    const professor = await prisma.professor.findUnique({ where: { id: professorId } });
+    if (!professor) {
+      return res.status(404).json({ error: "Professor not found" });
+    }
+
+    const course = await prisma.course.findUnique({ where: { id: courseId } });
+    if (!course) {
+      return res.status(404).json({ error: "Course not found" });
+    }
+
+    if (tagIds && tagIds.length > 0) {
+      const existingTags = await prisma.tag.findMany({ where: { id: { in: tagIds } } });
+      if (existingTags.length !== tagIds.length) {
+        return res.status(404).json({ error: "One or more tags not found" });
+      }
+    }
+
     const review = await prisma.review.create({
       data: {
         professorId,

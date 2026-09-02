@@ -23,14 +23,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
 
   // On first load, check if we already have a saved token from a previous session
-  // (e.g. the user refreshed the page). If so, restore it instead of forcing a re-login.
+  // (e.g. the user refreshed the page). If so, verify it against the backend before
+  // trusting it - the user it points to may no longer exist (e.g. a dev database
+  // reset), in which case we clear it instead of showing a logged-in state that
+  // fails as soon as it tries to do anything.
   useEffect(() => {
     const savedToken = localStorage.getItem("token");
     const savedUser = localStorage.getItem("user");
-    if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUser(JSON.parse(savedUser));
-    }
+    if (!savedToken || !savedUser) return;
+
+    fetch("http://localhost:3000/auth/me", {
+      headers: { Authorization: `Bearer ${savedToken}` },
+    })
+      .then((res) => (res.ok ? res.json() : Promise.reject()))
+      .then((data) => {
+        setToken(savedToken);
+        setUser(data.user);
+      })
+      .catch(() => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+      });
   }, []);
 
   async function login(email: string, password: string) {

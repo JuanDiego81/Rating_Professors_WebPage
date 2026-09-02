@@ -146,3 +146,49 @@ export async function createProfessor(req: AuthenticatedRequest, res: Response) 
     res.status(500).json({ error: "Failed to create professor" });
   }
 }
+
+// POST /professors/:id/courses
+// Links an already-existing course to an already-existing professor (e.g. so it
+// shows up as an option when writing a review). Protected by requireAuth.
+export async function addCourseToProfessor(req: AuthenticatedRequest, res: Response) {
+  try {
+    const professorId = req.params.id as string;
+    const { courseId } = req.body;
+
+    if (!courseId) {
+      return res.status(400).json({ error: "courseId is required" });
+    }
+
+    const professor = await prisma.professor.findUnique({ where: { id: professorId } });
+    if (!professor) {
+      return res.status(404).json({ error: "Professor not found" });
+    }
+
+    const course = await prisma.course.findUnique({ where: { id: courseId } });
+    if (!course) {
+      return res.status(404).json({ error: "Course not found" });
+    }
+
+    if (course.departmentId !== professor.departmentId) {
+      return res.status(400).json({ error: "Course does not belong to this professor's department" });
+    }
+
+    const updated = await prisma.professor.update({
+      where: { id: professorId },
+      data: {
+        courses: {
+          connect: { id: courseId },
+        },
+      },
+      include: {
+        department: true,
+        courses: true,
+      },
+    });
+
+    res.status(200).json(updated);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to add course to professor" });
+  }
+}
